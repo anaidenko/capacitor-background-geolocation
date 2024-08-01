@@ -52,16 +52,16 @@ export class HomePage {
   async onRouterNavigate(event:NavigationEvent) {
     if (event instanceof NavigationStart) {
       if (event.url === '/home') {
-        await BackgroundGeolocation.removeListeners();
-        await BackgroundGeolocation.stop();
+        // await BackgroundGeolocation.removeListeners();
+        // await BackgroundGeolocation.stop();
       }
     }
   }
 
   async init() {
     // When we return to Home page, stop the plugin and remove all listeners.
-    await BackgroundGeolocation.stop();
-    await BackgroundGeolocation.removeListeners();
+    // await BackgroundGeolocation.stop();
+    // await BackgroundGeolocation.removeListeners();
 
     registerTransistorAuthorizationListener(this.router);
 

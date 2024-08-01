@@ -48,6 +48,7 @@ import {registerTransistorAuthorizationListener} from "../lib/authorization";
 
 import { SettingsPage } from './modals/settings/settings.page';
 import { GeofencePage} from "./modals/geofence/geofence.page";
+import { LocalNotifications, LocalNotificationSchema } from '@capacitor/local-notifications';
 
 const CONTAINER_BORDER_POWER_SAVE_OFF = 'none';
 const CONTAINER_BORDER_POWER_SAVE_ON = '7px solid red';
@@ -246,6 +247,12 @@ export class AdvancedPage implements OnInit, OnDestroy, AfterContentInit {
       enableHeadless: true,
       autoSync: true,
       maxDaysToPersist: 14,
+      notification: {
+        title: "BGGeolocationDemo",
+        text: "Background location tracking enabled",
+        sticky: true
+      },
+      geofenceModeHighAccuracy: true,
     }).then(async (state) => {
       // Store the plugin state onto ourself for convenience.
       console.log('- BackgroundGeolocation is ready: ', state);
@@ -479,6 +486,8 @@ export class AdvancedPage implements OnInit, OnDestroy, AfterContentInit {
     this.bgService.playSound('BUTTON_CLICK');
 
     if (this.state.enabled) {
+      await LocalNotifications.requestPermissions();
+
       let onSuccess = (state) => {
         console.log('[js] START SUCCESS :', state);
       };
@@ -681,7 +690,37 @@ export class AdvancedPage implements OnInit, OnDestroy, AfterContentInit {
   */
   async onGeofence(event:GeofenceEvent) {
     console.log('[geofence] -', event);    
+    this.sendGeofenceNotification(event);
   }
+
+  private lastNotificationId = 0;
+
+  private sendGeofenceNotification(event:GeofenceEvent) {
+    const entered = event.action === "ENTER";
+    const exited = event.action === "EXIT";
+
+    if (entered || exited) {
+      const id = event.identifier;
+      const time = event.timestamp;
+
+      const notification = entered
+        ? {
+          title: `Entered geofence ${id}`,
+          body: `You entered the geofence \"${id}\" at ${time}.`,
+          id: ++this.lastNotificationId
+        }
+        : {
+          title: `Exited geofence ${id}`,
+          body: `You exited the geofence \"${id}\" at ${time}.`,
+          id: ++this.lastNotificationId
+        };
+
+      LocalNotifications.schedule({
+        notifications: [notification]
+      });
+    }
+  }
+
   /**
   * @event http
   */
